@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Windows 11 Fluent Dark Palette -->
+    <color name="bg_main">#1A1B1E</color>
+    <color name="card_bg">#25262B</color>
+    <color name="card_inner">#1E1F24</color>
+    <color name="card_border">#2C2E33</color>
+    
+    <color name="accent_primary">#4F46E5</color>
+    <color name="accent_primary_hover">#4338CA</color>
+    
+    <color name="status_success">#10B981</color>
+    <color name="status_success_bg">#064E3B</color>
+    
+    <color name="status_danger">#EF4444</color>
+    <color name="status_danger_bg">#7F1D1D</color>
+    
+    <color name="status_warning">#F59E0B</color>
+    <color name="status_warning_bg">#78350F</color>
+    
+    <color name="text_primary">#F1F3F5</color>
+    <color name="text_secondary">#909296</color>
+    <color name="input_bg">#141517</color>
+</resources>

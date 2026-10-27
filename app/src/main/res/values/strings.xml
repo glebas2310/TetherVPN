@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">EveryProxy Fluent</string>
+    <string name="subtitle">Мобильный HTTP-прокси для Windows 10/11</string>
+    <string name="status_stopped">⚪ Остановлен</string>
+    <string name="status_active">🟢 Прокси активен</string>
+    <string name="ip_label">IP-адрес точки доступа / Wi-Fi</string>
+    <string name="port_label">Порт HTTP-прокси</string>
+    <string name="btn_start">Включить проксирование</string>
+    <string name="btn_stop">Остановить прокси</string>
+    <string name="btn_test_vpn">🔍 Проверить VPN на смартфоне</string>
+    <string name="btn_oneplus_setup">🛡️ Защита от закрытия (OnePlus)</string>
+    <string name="traffic_label">Трафик и соединения</string>
+    <string name="log_label">Журнал событий</string>
+</resources>
