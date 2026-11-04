@@ -1,48 +1,49 @@
 @echo off
-chcp 65001 >nul
-title TetherVPN - Отправка на GitHub для сборки APK
+title Push TetherVPN to GitHub
 cd /d "%~dp0"
 
-echo =====================================================================
-echo  TetherVPN: Автоматическая отправка проекта в GitHub
-echo  После отправки GitHub Actions автоматически соберет готовый APK!
-echo =====================================================================
+echo ===================================================
+echo   Pushing TetherVPN to GitHub...
+echo ===================================================
 echo.
 
-set DEFAULT_URL=https://github.com/glebas2310/TetherVPN.git
-echo По умолчанию: %DEFAULT_URL%
-set /p REPO_URL="Вставьте ссылку на репозиторий (или нажмите Enter для значения по умолчанию): "
+echo [*] Resetting stale git proxies...
+git config --global --unset http.proxy 2>nul
+git config --global --unset https.proxy 2>nul
 
-if "%REPO_URL%"=="" (
-    set REPO_URL=%DEFAULT_URL%
-)
+echo [*] Setting git author identity...
+git config user.name "glebas2310"
+git config user.email "glebas2310@users.noreply.github.com"
 
-echo.
-echo [*] Инициализация Git...
-if not exist ".git" (
-    git init
-    git branch -M main
-)
-
-echo [*] Добавление файлов проекта...
-git add .
-git commit -m "TetherVPN: Minimal HTTP proxy for Samsung Galaxy S23"
-
-echo [*] Настройка удаленного репозитория...
+echo [*] Initializing git...
+git init
+git branch -M main
 git remote remove origin 2>nul
-git remote add origin %REPO_URL%
+git remote add origin https://github.com/glebas2310/TetherVPN.git
 
-echo [*] Отправка в GitHub (git push)...
+echo [*] Adding files...
+git add .
+git commit -m "TetherVPN: Minimal HTTP proxy for Samsung Galaxy S23" 2>nul
+
+echo.
+echo [*] Uploading to https://github.com/glebas2310/TetherVPN.git ...
+echo (If a browser window opens, please sign in to GitHub to authorize)
+echo.
 git push -u origin main --force
 
+if %ERRORLEVEL% EQU 0 (
+    echo.
+    echo ===================================================
+    echo [SUCCESS] Pushed to GitHub successfully!
+    echo Check APK build progress at:
+    echo https://github.com/glebas2310/TetherVPN/actions
+    echo ===================================================
+) else (
+    echo.
+    echo ===================================================
+    echo [ERROR] Push failed. Check the error message above.
+    echo ===================================================
+)
+
 echo.
-echo =====================================================================
-echo [OK] Проект TetherVPN успешно отправлен в GitHub!
-echo.
-echo Перейдите во вкладку Actions в вашем репозитории:
-echo %REPO_URL%/actions
-echo.
-echo GitHub уже запустил сборку: [Build TetherVPN APK]
-echo Через ~1.5-2 минуты готовый APK появится в разделе Artifacts!
-echo =====================================================================
 pause
