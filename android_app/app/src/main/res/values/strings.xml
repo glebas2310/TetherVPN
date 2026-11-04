@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">TetherVPN</string>
+    <string name="app_subtitle">HTTP Proxy for Samsung S23</string>
+    <string name="status_stopped">OFFLINE</string>
+    <string name="status_running">ONLINE</string>
+    <string name="btn_start">Start HTTP Proxy</string>
+    <string name="btn_stop">Stop HTTP Proxy</string>
+    <string name="card_connection_title">Connection Details</string>
+    <string name="label_ip">Phone IP Address:</string>
+    <string name="label_port">Proxy Port:</string>
+    <string name="default_port">8080</string>
+    <string name="btn_copy">Copy IP:Port</string>
+    <string name="copied_toast">Copied to clipboard!</string>
+    <string name="card_stats_title">Live Traffic</string>
+    <string name="stats_active_connections">Active Connections: %1$d</string>
+    <string name="stats_traffic">↑ %1$s  |  ↓ %2$s</string>
+    <string name="card_samsung_title">Samsung OneUI Protection</string>
+    <string name="samsung_desc">Disable Battery Optimization so Samsung does not put TetherVPN to sleep when screen is locked.</string>
+    <string name="samsung_btn_exempt">Exempt from Battery Saver</string>
+    <string name="samsung_exempt_done">Protected: Unrestricted</string>
+    <string name="card_help_title">How to share VPN subscription</string>
+    <string name="help_step1">1. Turn on Mobile Hotspot (or Wi-Fi) on this phone.</string>
+    <string name="help_step2">2. In your VPN app (v2rayNG, Clash, WireGuard, Outline), make sure TetherVPN is allowed in \"Split Tunneling / Per-App Proxy\".</string>
+    <string name="help_step3">3. On your PC/client device, set HTTP Proxy to the IP and Port shown above.</string>
+    <string name="notification_channel_name">TetherVPN Service</string>
+    <string name="notification_channel_desc">Keeps the HTTP Proxy active in the background</string>
+    <string name="notification_title">TetherVPN is Active</string>
+    <string name="notification_content">Proxy running on %1$s:%2$d</string>
+</resources>

@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+build/
+dist/
+
+# Android & Gradle
+.gradle/
+**/build/
+captures/
+*.apk
+*.aab
+.cxx/
+local.properties
+
+# IDEs
+.idea/
+*.iml
+.vscode/
