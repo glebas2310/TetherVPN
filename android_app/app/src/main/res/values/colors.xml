@@ -5,6 +5,10 @@
     <color name="card_stroke">#2E323D</color>
     <color name="card_inner">#16171B</color>
 
+    <color name="tab_bg">#16171B</color>
+    <color name="tab_selected_bg">#2A2E3D</color>
+    <color name="tab_selected_stroke">#3B82F6</color>
+
     <color name="accent_blue">#3B82F6</color>
     <color name="accent_blue_hover">#2563EB</color>
     <color name="accent_indigo">#6366F1</color>
@@ -14,6 +18,9 @@
     
     <color name="accent_red">#EF4444</color>
     <color name="accent_red_bg">#3D1E22</color>
+
+    <color name="accent_yellow">#F59E0B</color>
+    <color name="accent_yellow_bg">#3D321E</color>
 
     <color name="text_white">#F9FAFB</color>
     <color name="text_muted">#9CA3AF</color>

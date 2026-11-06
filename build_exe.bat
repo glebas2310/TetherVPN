@@ -1,10 +1,10 @@
 @echo off
 chcp 65001 >nul
-title Сборка Every Proxy Switcher в .EXE
+title Сборка TetherVPN в .EXE
 cd /d "%~dp0"
 
 echo =======================================================
-echo  Сборка Every Proxy Switcher в .EXE (PyInstaller)
+echo  Сборка TetherVPN в .EXE (PyInstaller)
 echo =======================================================
 
 echo  Запуск PyInstaller...

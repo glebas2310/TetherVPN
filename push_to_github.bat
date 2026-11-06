@@ -23,7 +23,7 @@ git remote add origin https://github.com/glebas2310/TetherVPN.git
 
 echo [*] Adding files...
 git add .
-git commit -m "TetherVPN: Minimal HTTP proxy for Samsung Galaxy S23" 2>nul
+git commit -m "TetherVPN: Two-mode APK (Server & Client) and updated PC app" 2>nul
 
 echo.
 echo [*] Uploading to https://github.com/glebas2310/TetherVPN.git ...

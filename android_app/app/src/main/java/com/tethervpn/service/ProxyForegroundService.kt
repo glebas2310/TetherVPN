@@ -136,7 +136,7 @@ class ProxyForegroundService : Service() {
             val pm = getSystemService(Context.POWER_SERVICE) as? PowerManager
             wakeLock = pm?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "TetherVPN:WakeLock")?.apply {
                 setReferenceCounted(false)
-                acquire(12 * 60 * 60 * 1000L) // 12 hours max safety timeout
+                acquire(12 * 60 * 60 * 1000L)
             }
 
             val wm = applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
@@ -206,7 +206,7 @@ class ProxyForegroundService : Service() {
             .setContentIntent(mainPendingIntent)
             .addAction(
                 android.R.drawable.ic_menu_close_clear_cancel,
-                getString(R.string.btn_stop),
+                getString(R.string.btn_stop_server),
                 stopPendingIntent
             )
             .setOngoing(true)

@@ -4,11 +4,13 @@ import android.Manifest
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
-import android.graphics.Color
+import android.net.VpnService
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -16,11 +18,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.tethervpn.R
+import com.tethervpn.client.ProxyChecker
+import com.tethervpn.client.ProxyClientVpnService
 import com.tethervpn.databinding.ActivityMainBinding
 import com.tethervpn.proxy.ProxyStats
 import com.tethervpn.service.ProxyForegroundService
 import com.tethervpn.util.NetworkUtils
-import com.tethervpn.util.SamsungOptimizer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -34,21 +37,37 @@ class MainActivity : AppCompatActivity() {
         ActivityResultContracts.RequestPermission()
     ) { _ -> }
 
+    private var pendingClientHost: String? = null
+    private var pendingClientPort: Int = 8080
+
+    private val vpnPrepareLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val host = pendingClientHost ?: "192.168.43.1"
+            ProxyClientVpnService.startClient(this, host, pendingClientPort)
+        } else {
+            Toast.makeText(this, "Разрешение на VPN отклонено", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         checkPermissions()
-        setupViews()
-        observeServiceState()
+        setupModeTabs()
+        setupServerViews()
+        setupClientViews()
+        observeServerState()
+        observeClientState()
         startStatsUpdateLoop()
     }
 
     override fun onResume() {
         super.onResume()
-        updateIpAddress()
-        updateBatteryOptimizationState()
+        updateServerIp()
     }
 
     private fun checkPermissions() {
@@ -61,21 +80,60 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupViews() {
-        // Load saved port
-        val savedPort = prefs.getInt("proxy_port", 8080)
-        binding.etPort.setText(savedPort.toString())
+    private fun setupModeTabs() {
+        binding.btnTabShare.setOnClickListener {
+            switchMode(isShareMode = true)
+        }
+        binding.btnTabConnect.setOnClickListener {
+            switchMode(isShareMode = false)
+        }
+    }
 
-        // Refresh IP
-        binding.btnRefreshIp.setOnClickListener {
-            updateIpAddress()
-            Toast.makeText(this, "IP refreshed", Toast.LENGTH_SHORT).show()
+    private fun switchMode(isShareMode: Boolean) {
+        if (isShareMode) {
+            binding.btnTabShare.setBackgroundResource(R.drawable.bg_tab_active)
+            binding.btnTabShare.setTextColor(ContextCompat.getColor(this, R.color.text_white))
+
+            binding.btnTabConnect.setBackgroundResource(R.drawable.bg_tab_inactive)
+            binding.btnTabConnect.setTextColor(ContextCompat.getColor(this, R.color.text_muted))
+
+            binding.layoutShare.visibility = View.VISIBLE
+            binding.layoutConnect.visibility = View.GONE
+            updateServerIp()
+        } else {
+            binding.btnTabConnect.setBackgroundResource(R.drawable.bg_tab_active)
+            binding.btnTabConnect.setTextColor(ContextCompat.getColor(this, R.color.text_white))
+
+            binding.btnTabShare.setBackgroundResource(R.drawable.bg_tab_inactive)
+            binding.btnTabShare.setTextColor(ContextCompat.getColor(this, R.color.text_muted))
+
+            binding.layoutShare.visibility = View.GONE
+            binding.layoutConnect.visibility = View.VISIBLE
+
+            // Auto-detect gateway if target IP is not filled
+            val currentTarget = binding.etTargetIp.text.toString().trim()
+            if (currentTarget.isEmpty() || currentTarget == "192.168.43.1") {
+                val gw = NetworkUtils.getWifiGatewayIp(this)
+                binding.etTargetIp.setText(gw)
+            }
+        }
+    }
+
+    // =====================================================================
+    // РЕЖИМ 1: РАЗДАЧА (СЕРВЕР)
+    // =====================================================================
+    private fun setupServerViews() {
+        val savedPort = prefs.getInt("server_port", 8080)
+        binding.etServerPort.setText(savedPort.toString())
+
+        binding.btnRefreshServerIp.setOnClickListener {
+            updateServerIp()
+            Toast.makeText(this, "IP-адрес обновлен", Toast.LENGTH_SHORT).show()
         }
 
-        // Copy IP:Port
-        binding.btnCopyAddress.setOnClickListener {
-            val ip = binding.tvIpAddress.text.toString()
-            val port = binding.etPort.text.toString().trim()
+        binding.btnCopyServerAddress.setOnClickListener {
+            val ip = binding.tvServerIp.text.toString()
+            val port = binding.etServerPort.text.toString().trim()
             val formatted = "$ip:$port"
 
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -85,85 +143,66 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, getString(R.string.copied_toast) + " ($formatted)", Toast.LENGTH_SHORT).show()
         }
 
-        // Toggle Proxy
-        binding.btnToggleProxy.setOnClickListener {
+        binding.btnToggleServer.setOnClickListener {
             if (ProxyForegroundService.isRunningFlow.value) {
                 ProxyForegroundService.stopService(this)
             } else {
-                val portStr = binding.etPort.text.toString().trim()
+                val portStr = binding.etServerPort.text.toString().trim()
                 val port = portStr.toIntOrNull() ?: 8080
                 if (port in 1024..65535) {
-                    prefs.edit().putInt("proxy_port", port).apply()
+                    prefs.edit().putInt("server_port", port).apply()
                     ProxyForegroundService.startService(this, port)
                 } else {
-                    Toast.makeText(this, "Enter valid port between 1024 and 65535", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "Введите корректный порт (1024-65535)", Toast.LENGTH_SHORT).show()
                 }
             }
         }
-
-        // Samsung Battery Optimization
-        binding.btnBatteryExempt.setOnClickListener {
-            SamsungOptimizer.requestIgnoreBatteryOptimization(this)
-        }
     }
 
-    private fun updateIpAddress() {
+    private fun updateServerIp() {
         val ip = NetworkUtils.getPrimaryIp()
-        binding.tvIpAddress.text = ip
+        binding.tvServerIp.text = ip
     }
 
-    private fun updateBatteryOptimizationState() {
-        val isExempt = SamsungOptimizer.isIgnoringBatteryOptimizations(this)
-        if (isExempt) {
-            binding.btnBatteryExempt.text = getString(R.string.samsung_exempt_done)
-            binding.btnBatteryExempt.setTextColor(ContextCompat.getColor(this, R.color.accent_green))
-            binding.btnBatteryExempt.isEnabled = false
-        } else {
-            binding.btnBatteryExempt.text = getString(R.string.samsung_btn_exempt)
-            binding.btnBatteryExempt.setTextColor(ContextCompat.getColor(this, R.color.accent_blue))
-            binding.btnBatteryExempt.isEnabled = true
-        }
-    }
-
-    private fun observeServiceState() {
+    private fun observeServerState() {
         lifecycleScope.launch {
             ProxyForegroundService.isRunningFlow.collect { running ->
-                updateUiForRunningState(running)
+                updateServerUi(running)
             }
         }
     }
 
-    private fun updateUiForRunningState(running: Boolean) {
+    private fun updateServerUi(running: Boolean) {
         if (running) {
-            binding.tvStatusBadge.text = getString(R.string.status_running)
-            binding.tvStatusBadge.setTextColor(ContextCompat.getColor(this, R.color.accent_green))
-            binding.tvStatusBadge.backgroundTintList = ColorStateList.valueOf(
+            binding.tvServerStatusBadge.text = getString(R.string.status_running)
+            binding.tvServerStatusBadge.setTextColor(ContextCompat.getColor(this, R.color.accent_green))
+            binding.tvServerStatusBadge.backgroundTintList = ColorStateList.valueOf(
                 ContextCompat.getColor(this, R.color.accent_green_bg)
             )
 
-            binding.btnToggleProxy.text = getString(R.string.btn_stop)
-            binding.btnToggleProxy.backgroundTintList = ColorStateList.valueOf(
+            binding.btnToggleServer.text = getString(R.string.btn_stop_server)
+            binding.btnToggleServer.backgroundTintList = ColorStateList.valueOf(
                 ContextCompat.getColor(this, R.color.accent_red)
             )
-            binding.tvToggleHint.text = "HTTP Proxy active • Routing traffic through phone"
+            binding.tvServerHint.text = getString(R.string.server_toggle_hint_active)
 
-            binding.etPort.isEnabled = false
-            binding.cardStats.visibility = View.VISIBLE
+            binding.etServerPort.isEnabled = false
+            binding.cardServerStats.visibility = View.VISIBLE
         } else {
-            binding.tvStatusBadge.text = getString(R.string.status_stopped)
-            binding.tvStatusBadge.setTextColor(ContextCompat.getColor(this, R.color.accent_red))
-            binding.tvStatusBadge.backgroundTintList = ColorStateList.valueOf(
+            binding.tvServerStatusBadge.text = getString(R.string.status_stopped)
+            binding.tvServerStatusBadge.setTextColor(ContextCompat.getColor(this, R.color.accent_red))
+            binding.tvServerStatusBadge.backgroundTintList = ColorStateList.valueOf(
                 ContextCompat.getColor(this, R.color.accent_red_bg)
             )
 
-            binding.btnToggleProxy.text = getString(R.string.btn_start)
-            binding.btnToggleProxy.backgroundTintList = ColorStateList.valueOf(
+            binding.btnToggleServer.text = getString(R.string.btn_start_server)
+            binding.btnToggleServer.backgroundTintList = ColorStateList.valueOf(
                 ContextCompat.getColor(this, R.color.accent_blue)
             )
-            binding.tvToggleHint.text = "Tap to start HTTP proxy"
+            binding.tvServerHint.text = getString(R.string.server_toggle_hint_idle)
 
-            binding.etPort.isEnabled = true
-            binding.cardStats.visibility = View.GONE
+            binding.etServerPort.isEnabled = true
+            binding.cardServerStats.visibility = View.GONE
         }
     }
 
@@ -180,6 +219,135 @@ class MainActivity : AppCompatActivity() {
                 }
                 delay(1000)
             }
+        }
+    }
+
+    // =====================================================================
+    // РЕЖИМ 2: ПОДКЛЮЧЕНИЕ (КЛИЕНТ)
+    // =====================================================================
+    private fun setupClientViews() {
+        val savedTargetIp = prefs.getString("client_target_ip", NetworkUtils.getWifiGatewayIp(this))
+        val savedTargetPort = prefs.getInt("client_target_port", 8080)
+
+        binding.etTargetIp.setText(savedTargetIp)
+        binding.etTargetPort.setText(savedTargetPort.toString())
+
+        // Auto detect gateway
+        binding.btnDetectGateway.setOnClickListener {
+            val gw = NetworkUtils.getWifiGatewayIp(this)
+            binding.etTargetIp.setText(gw)
+            Toast.makeText(this, "Определен шлюз Wi-Fi: $gw", Toast.LENGTH_SHORT).show()
+        }
+
+        // Check proxy availability
+        binding.btnCheckProxy.setOnClickListener {
+            val host = binding.etTargetIp.text.toString().trim()
+            val port = binding.etTargetPort.text.toString().trim().toIntOrNull() ?: 8080
+
+            if (host.isEmpty()) {
+                binding.tvClientCheckResult.text = "Укажите IP-адрес сервера"
+                return@setOnClickListener
+            }
+
+            binding.tvClientCheckResult.text = getString(R.string.client_status_checking)
+            binding.tvClientCheckResult.setTextColor(ContextCompat.getColor(this, R.color.accent_yellow))
+
+            lifecycleScope.launch {
+                when (val result = ProxyChecker.checkProxy(host, port)) {
+                    is ProxyChecker.CheckResult.Success -> {
+                        binding.tvClientCheckResult.text = getString(R.string.client_status_success, result.latencyMs)
+                        binding.tvClientCheckResult.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.accent_green))
+                    }
+                    is ProxyChecker.CheckResult.Error -> {
+                        binding.tvClientCheckResult.text = getString(R.string.client_status_fail, result.message)
+                        binding.tvClientCheckResult.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.accent_red))
+                    }
+                }
+            }
+        }
+
+        // Toggle Client Connection
+        binding.btnToggleClient.setOnClickListener {
+            if (ProxyClientVpnService.isClientConnectedFlow.value) {
+                ProxyClientVpnService.stopClient(this)
+            } else {
+                val host = binding.etTargetIp.text.toString().trim()
+                val port = binding.etTargetPort.text.toString().trim().toIntOrNull() ?: 8080
+
+                if (host.isEmpty()) {
+                    Toast.makeText(this, "Введите IP-адрес сервера раздачи", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                prefs.edit()
+                    .putString("client_target_ip", host)
+                    .putInt("client_target_port", port)
+                    .apply()
+
+                pendingClientHost = host
+                pendingClientPort = port
+
+                // Prepare VPN service
+                val intent = VpnService.prepare(this)
+                if (intent != null) {
+                    vpnPrepareLauncher.launch(intent)
+                } else {
+                    ProxyClientVpnService.startClient(this, host, port)
+                }
+            }
+        }
+
+        // Open Wi-Fi settings
+        binding.btnOpenWifiSettings.setOnClickListener {
+            try {
+                startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
+            } catch (e: Exception) {
+                Toast.makeText(this, "Откройте настройки Wi-Fi вручную", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun observeClientState() {
+        lifecycleScope.launch {
+            ProxyClientVpnService.isClientConnectedFlow.collect { connected ->
+                updateClientUi(connected)
+            }
+        }
+    }
+
+    private fun updateClientUi(connected: Boolean) {
+        if (connected) {
+            binding.tvClientStatusBadge.text = getString(R.string.status_connected)
+            binding.tvClientStatusBadge.setTextColor(ContextCompat.getColor(this, R.color.accent_green))
+            binding.tvClientStatusBadge.backgroundTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(this, R.color.accent_green_bg)
+            )
+
+            binding.btnToggleClient.text = getString(R.string.btn_disconnect_vpn)
+            binding.btnToggleClient.backgroundTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(this, R.color.accent_red)
+            )
+            binding.tvClientHint.text = "Трафик направляется через ${binding.etTargetIp.text}:${binding.etTargetPort.text}"
+
+            binding.etTargetIp.isEnabled = false
+            binding.etTargetPort.isEnabled = false
+            binding.btnDetectGateway.isEnabled = false
+        } else {
+            binding.tvClientStatusBadge.text = getString(R.string.status_stopped)
+            binding.tvClientStatusBadge.setTextColor(ContextCompat.getColor(this, R.color.accent_red))
+            binding.tvClientStatusBadge.backgroundTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(this, R.color.accent_red_bg)
+            )
+
+            binding.btnToggleClient.text = getString(R.string.btn_connect_vpn)
+            binding.btnToggleClient.backgroundTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(this, R.color.accent_blue)
+            )
+            binding.tvClientHint.text = "Направляет весь трафик через прокси раздающего"
+
+            binding.etTargetIp.isEnabled = true
+            binding.etTargetPort.isEnabled = true
+            binding.btnDetectGateway.isEnabled = true
         }
     }
 }

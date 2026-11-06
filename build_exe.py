@@ -1,5 +1,5 @@
 """
-Скрипт автоматической сборки Every Proxy Switcher в один исполняемый файл (.exe)
+Скрипт автоматической сборки TetherVPN в один исполняемый файл (.exe)
 с помощью PyInstaller.
 
 Параметры сборки:
@@ -45,7 +45,7 @@ def build_executable():
         sys.exit(1)
 
     print("\n" + "=" * 60)
-    print(" [*] СБОРКА EVERY PROXY SWITCHER В .EXE (PYINSTALLER)")
+    print(" [*] СБОРКА TETHERVPN В .EXE (PYINSTALLER)")
     print("=" * 60)
 
     if not ensure_pyinstaller():
@@ -60,7 +60,7 @@ def build_executable():
         "--onefile",
         "--windowed",
         "--name",
-        "EveryProxySwitcher",
+        "TetherVPN",
         "--uac-admin",  # Автоматический запрос прав администратора при запуске .exe
         "--collect-all",
         "customtkinter",  # Встраивание всех json-тем и ассетов CustomTkinter
@@ -77,12 +77,12 @@ def build_executable():
     proc = subprocess.run(cmd, cwd=base_dir)
 
     if proc.returncode == 0:
-        exe_path = os.path.join(base_dir, "dist", "EveryProxySwitcher.exe")
+        exe_path = os.path.join(base_dir, "dist", "TetherVPN.exe")
         print("\n" + "=" * 60)
         print(" [OK] СБОРКА УСПЕШНО ЗАВЕРШЕНА!")
         print(f" Готовый файл: {exe_path}")
         print("=" * 60)
-        print("\nВы можете запускать EveryProxySwitcher.exe на любом компьютере с Windows 10/11.")
+        print("\nВы можете запускать TetherVPN.exe на любом компьютере с Windows 10/11.")
     else:
         print(f"\n[X] Сборка завершилась с ошибкой (код {proc.returncode}).")
         sys.exit(proc.returncode)

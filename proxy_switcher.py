@@ -1,6 +1,6 @@
 """
-Every Proxy Switcher — Редизайн интерфейса (Windows 11 Fluent Dark на CustomTkinter).
-Утилита автоматизации сетевых настроек Windows 10/11 для работы через Every Proxy
+TetherVPN — Редизайн интерфейса (Windows 11 Fluent Dark на CustomTkinter).
+Утилита автоматизации сетевых настроек Windows 10/11 для работы через TetherVPN
 и быстрого возврата к домашнему интернету.
 
 Сохранена вся архитектура и системная логика:
@@ -11,7 +11,7 @@ Every Proxy Switcher — Редизайн интерфейса (Windows 11 Fluen
 - Глобальный прокси Git (git config --global)
 - Маскировка раздачи/тетеринга (Hop Limit TTL=65 / 128)
 - Очистка кэша DNS (ipconfig /flushdns)
-- ICMP Ping и проверка TCP-порта Every Proxy
+- ICMP Ping и проверка TCP-порта TetherVPN
 """
 
 from __future__ import annotations
@@ -239,7 +239,7 @@ def get_local_ips() -> set[str]:
 
 def get_candidate_ips(current_ip: str = "") -> list[tuple[str, str]]:
     """
-    Формирует список потенциальных IP-адресов телефона с Every Proxy:
+    Формирует список потенциальных IP-адресов телефона с TetherVPN:
     1. Текущий введенный IP (если есть).
     2. Все основные шлюзы активных адаптеров (ipconfig).
     3. Стандартные шлюзы точек доступа: 192.168.43.1 (Android), 172.20.10.1 (iOS), 192.168.42.129 (USB).
@@ -299,7 +299,7 @@ def get_candidate_ips(current_ip: str = "") -> list[tuple[str, str]]:
 def check_proxy_and_vpn(ip: str, port: int = 8080, timeout: float = 2.5) -> dict:
     """
     Глубокая сквозная проверка прокси-сервера и мобильного VPN:
-    1. TCP-сокет к IP:PORT (проверка, запущен ли Every Proxy).
+    1. TCP-сокет к IP:PORT (проверка, запущен ли TetherVPN).
     2. Пробный HTTP-запрос через прокси (проверка, пропускает ли VPN интернет-пакеты).
     3. Определение внешнего IP и геолокации VPN (страна, город).
     """
@@ -323,7 +323,7 @@ def check_proxy_and_vpn(ip: str, port: int = 8080, timeout: float = 2.5) -> dict
         sock.close()
         if c_code != 0:
             result["status"] = "UNREACHABLE"
-            result["message"] = f"Порт {port} закрыт (Every Proxy выключен на {ip})"
+            result["message"] = f"Порт {port} закрыт (TetherVPN выключен на {ip})"
             return result
     except Exception as exc:
         result["status"] = "UNREACHABLE"
@@ -332,7 +332,7 @@ def check_proxy_and_vpn(ip: str, port: int = 8080, timeout: float = 2.5) -> dict
 
     result["port_open"] = True
 
-    # 2. Проверка сквозного интернета через Every Proxy (работоспособность VPN)
+    # 2. Проверка сквозного интернета через TetherVPN (работоспособность VPN)
     proxy_url = f"http://{ip}:{port}"
     handler = urllib.request.ProxyHandler({"http": proxy_url, "https": proxy_url})
     opener = urllib.request.build_opener(handler)
@@ -394,7 +394,7 @@ def check_proxy_and_vpn(ip: str, port: int = 8080, timeout: float = 2.5) -> dict
         loc_desc = f" ({result['location']})" if result["location"] else ""
         ext_desc = f", внешний IP: {result['external_ip']}" if result["external_ip"] else ""
         lat_desc = f", задержка: {result['latency_ms']}мс" if result["latency_ms"] else ""
-        result["message"] = f"VPN и Every Proxy работают исправно!{loc_desc}{ext_desc}{lat_desc}"
+        result["message"] = f"VPN и TetherVPN работают исправно!{loc_desc}{ext_desc}{lat_desc}"
     else:
         result["status"] = "PORT_OPEN_NO_VPN"
         result["message"] = (
@@ -407,7 +407,7 @@ def check_proxy_and_vpn(ip: str, port: int = 8080, timeout: float = 2.5) -> dict
 
 def auto_detect_working_proxy(port: int = 8080, current_ip: str = "", log_cb=None) -> tuple[Optional[str], dict]:
     """
-    Быстро сканирует все сетевые интерфейсы, шлюзы и узлы ARP в поиске активного Every Proxy.
+    Быстро сканирует все сетевые интерфейсы, шлюзы и узлы ARP в поиске активного TetherVPN.
     Возвращает (лучший_IP, результат_диагностики).
     """
     def log(lvl: str, msg: str):
@@ -418,7 +418,7 @@ def auto_detect_working_proxy(port: int = 8080, current_ip: str = "", log_cb=Non
     if not candidates:
         return None, {"status": "NOT_FOUND", "message": "Сетевые узлы не обнаружены"}
 
-    log("INFO", f"🔍 Автопоиск Every Proxy среди {len(candidates)} потенциальных адресов сети...")
+    log("INFO", f"🔍 Автопоиск TetherVPN среди {len(candidates)} потенциальных адресов сети...")
 
     # Быстрый опрос TCP-порта 8080 параллельно
     open_candidates: list[tuple[str, str]] = []
@@ -442,7 +442,7 @@ def auto_detect_working_proxy(port: int = 8080, current_ip: str = "", log_cb=Non
     open_candidates = [r for r in port_results if r is not None]
 
     if not open_candidates:
-        log("WARN", f"Every Proxy не обнаружен на порту {port}. Проверьте Wi-Fi и тумблер в приложении.")
+        log("WARN", f"TetherVPN не обнаружен на порту {port}. Проверьте Wi-Fi и тумблер в приложении.")
         return None, {"status": "NOT_FOUND", "message": f"Порт {port} не отвечает ни на одном узле"}
 
     log("INFO", f"Найдено узлов с открытым портом {port}: {len(open_candidates)}. Проверка сквозного интернета (VPN)...")
@@ -570,7 +570,7 @@ class NetworkManager:
         check_ping: bool = True,
         log_cb: Optional[Callable[[str, str], None]] = None
     ) -> tuple[bool, str]:
-        """РЕЖИМ 1: «Включить проксирование (Every Proxy)»."""
+        """РЕЖИМ 1: «Включить проксирование (TetherVPN)»."""
         def log(lvl: str, msg: str):
             if log_cb:
                 log_cb(lvl, msg)
@@ -591,9 +591,9 @@ class NetworkManager:
 
         log("INFO", f"▶ Запуск активации прокси: {proxy_str}")
 
-        # 1. Проверка доступности Every Proxy и работы мобильного VPN
+        # 1. Проверка доступности TetherVPN и работы мобильного VPN
         if check_ping:
-            log("INFO", f"Проверка Every Proxy и сквозного интернета через VPN ({proxy_str})...")
+            log("INFO", f"Проверка TetherVPN и сквозного интернета через VPN ({proxy_str})...")
             diag = check_proxy_and_vpn(ip, port, timeout=2.5)
             if diag["status"] == "OK_VPN":
                 loc_txt = f" ({diag['location']})" if diag.get("location") else ""
@@ -601,11 +601,11 @@ class NetworkManager:
                 lat_txt = f", задержка: {diag['latency_ms']}мс" if diag.get("latency_ms") else ""
                 log("OK", f"✅ Связь подтверждена! VPN на смартфоне активен{loc_txt}{ext_txt}{lat_txt}.")
             elif diag["status"] == "PORT_OPEN_NO_VPN":
-                log("WARN", "⚠️ ВНИМАНИЕ: Порт Every Proxy открыт, но интернет-трафик через него НЕ ИДЕТ!")
+                log("WARN", "⚠️ ВНИМАНИЕ: Порт TetherVPN открыт, но интернет-трафик через него НЕ ИДЕТ!")
                 log("WARN", "Похоже, что VPN на смартфоне отключен, завис или не пропускает пакеты.")
                 log("WARN", "Применение сетевых настроек продолжается по запросу...")
             else:
-                log("WARN", f"Хост {proxy_str} не отвечает (проверьте точку доступа и Every Proxy).")
+                log("WARN", f"Хост {proxy_str} не отвечает (проверьте точку доступа и TetherVPN).")
                 log("WARN", "Продолжаем применение настроек по запросу...")
 
         # 2. Настройка системного прокси Windows в реестре HKCU
@@ -771,9 +771,9 @@ class NetworkManager:
 # 4. СОВРЕМЕННЫЙ ГРАФИЧЕСКИЙ ИНТЕРФЕЙС (CUSTOMTKINTER FLUENT DARK)
 # ==============================================================================
 
-class ModernProxySwitcherApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
+class TetherVPNApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
     """
-    Современный интерфейс в стиле Windows 11 Fluent Dark на базе CustomTkinter.
+    Современный интерфейс TetherVPN в стиле Windows 11 Fluent Dark на базе CustomTkinter.
     """
 
     # Палитра дизайна Fluent Dark / Catppuccin
@@ -798,7 +798,7 @@ class ModernProxySwitcherApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
         ctk.set_appearance_mode("dark")
         ctk.set_default_color_theme("blue")
 
-        self.title("Every Proxy Switcher — Сетевой шлюз и мобильный прокси")
+        self.title("TetherVPN — Сетевой шлюз и мобильный прокси")
         self.configure(fg_color=self.COLOR_BG)
 
         # Центрирование окна
@@ -827,7 +827,7 @@ class ModernProxySwitcherApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
         # Фокус на поле ввода IP
         self.after(150, lambda: self.entry_ip.focus_set())
 
-        # Автоматический фоновый поиск рабочего Every Proxy и проверка VPN
+        # Автоматический фоновый поиск рабочего TetherVPN и проверка VPN
         self.after(350, self.start_auto_detect_silent)
 
     def _center_window(self, width: int = 740, height: int = 800):
@@ -862,7 +862,7 @@ class ModernProxySwitcherApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
 
         lbl_title = ctk.CTkLabel(
             title_box,
-            text="Every Proxy Switcher",
+            text="TetherVPN",
             font=ctk.CTkFont(family="Segoe UI", size=18, weight="bold"),
             text_color=self.COLOR_TEXT
         )
@@ -954,7 +954,7 @@ class ModernProxySwitcherApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
         # Чип 4: TTL (Hop Limit)
         self.chip_ttl = self._create_status_chip(chips_grid, 3, "TTL (IPv4)", "128")
 
-        # ---------------- 3. КАРТОЧКА НАСТРОЕК EVERY PROXY ----------------
+        # ---------------- 3. КАРТОЧКА НАСТРОЕК TETHERVPN ----------------
         card_settings = ctk.CTkFrame(
             self.main_container,
             fg_color=self.COLOR_CARD,
@@ -970,7 +970,7 @@ class ModernProxySwitcherApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
 
         lbl_cfg_title = ctk.CTkLabel(
             hdr_settings,
-            text="ПАРАМЕТРЫ ПОДКЛЮЧЕНИЯ EVERY PROXY",
+            text="ПАРАМЕТРЫ ПОДКЛЮЧЕНИЯ TETHERVPN",
             font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
             text_color=self.COLOR_TEXT_MUTED
         )
@@ -978,7 +978,7 @@ class ModernProxySwitcherApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
 
         self.btn_autosearch = ctk.CTkButton(
             hdr_settings,
-            text="🔍 Автопоиск Every Proxy",
+            text="🔍 Автопоиск TetherVPN",
             width=175,
             height=28,
             corner_radius=6,
@@ -1000,7 +1000,7 @@ class ModernProxySwitcherApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
 
         lbl_ip = ctk.CTkLabel(
             ip_box,
-            text="IP-адрес телефона (из Every Proxy):",
+            text="IP-адрес телефона (из TetherVPN):",
             font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
             text_color=self.COLOR_TEXT
         )
@@ -1073,7 +1073,7 @@ class ModernProxySwitcherApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
         )
         self.btn_test_vpn.pack()
 
-        # Карточка живого статуса проверки Every Proxy & VPN
+        # Карточка живого статуса проверки TetherVPN & VPN
         self.vpn_status_card = ctk.CTkFrame(
             card_settings,
             fg_color=self.COLOR_CARD_ALT,
@@ -1085,7 +1085,7 @@ class ModernProxySwitcherApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
 
         self.lbl_vpn_status = ctk.CTkLabel(
             self.vpn_status_card,
-            text="💡 Нажмите '🔍 Автопоиск Every Proxy' для автоматического поиска рабочего IP и проверки VPN.",
+            text="💡 Нажмите '🔍 Автопоиск TetherVPN' для автоматического поиска рабочего IP и проверки VPN.",
             font=ctk.CTkFont(family="Segoe UI", size=11),
             text_color=self.COLOR_TEXT_MUTED,
             anchor="w",
@@ -1099,7 +1099,7 @@ class ModernProxySwitcherApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
 
         self.lbl_hint_tip = ctk.CTkLabel(
             self.frame_hint,
-            text="💡 Включите переключатель HTTP в Every Proxy на смартфоне и введите указанный IP.",
+            text="💡 Включите раздачу в TetherVPN на смартфоне и введите указанный IP.",
             font=ctk.CTkFont(family="Segoe UI", size=11),
             text_color=self.COLOR_TEXT_MUTED
         )
@@ -1143,7 +1143,7 @@ class ModernProxySwitcherApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
 
         self.btn_enable = ctk.CTkButton(
             actions_frame,
-            text="⚡ Включить проксирование (Every Proxy)",
+            text="⚡ Включить проксирование (TetherVPN)",
             height=46,
             corner_radius=10,
             font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"),
@@ -1390,7 +1390,7 @@ class ModernProxySwitcherApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
         threading.Thread(target=_task, daemon=True).start()
 
     def update_vpn_status_ui(self, diag: dict):
-        """Обновляет плашку статуса VPN и Every Proxy в интерфейсе."""
+        """Обновляет плашку статуса VPN и TetherVPN в интерфейсе."""
         st = diag.get("status", "UNREACHABLE")
         if st == "OK_VPN":
             loc = f" ({diag['location']})" if diag.get("location") else ""
@@ -1401,7 +1401,7 @@ class ModernProxySwitcherApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
                 border_color="#059669"
             )
             self.lbl_vpn_status.configure(
-                text=f"🟢 Every Proxy и VPN работают!{ext}{loc}{lat}",
+                text=f"🟢 TetherVPN и прокси работают!{ext}{loc}{lat}",
                 text_color="#10B981"
             )
         elif st == "PORT_OPEN_NO_VPN":
@@ -1419,7 +1419,7 @@ class ModernProxySwitcherApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
                 border_color="#EF4444"
             )
             self.lbl_vpn_status.configure(
-                text=f"❌ Хост {diag.get('ip', '')}:{diag.get('port', 8080)} недоступен (Every Proxy не отвечает)",
+                text=f"❌ Хост {diag.get('ip', '')}:{diag.get('port', 8080)} недоступен (TetherVPN не отвечает)",
                 text_color="#F87171"
             )
         else:
@@ -1428,12 +1428,12 @@ class ModernProxySwitcherApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
                 border_color=self.COLOR_BORDER
             )
             self.lbl_vpn_status.configure(
-                text="💡 Нажмите '🔍 Автопоиск Every Proxy' для автоматического поиска рабочего IP.",
+                text="💡 Нажмите '🔍 Автопоиск TetherVPN' для автоматического поиска рабочего IP.",
                 text_color=self.COLOR_TEXT_MUTED
             )
 
     def on_autosearch_clicked(self):
-        """Запуск сканирования сети для поиска активного Every Proxy и проверки VPN."""
+        """Запуск сканирования сети для поиска активного TetherVPN и проверки VPN."""
         if self.is_busy:
             return
 
@@ -1448,7 +1448,7 @@ class ModernProxySwitcherApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
             found_ip, diag = auto_detect_working_proxy(port=port, current_ip=curr_ip, log_cb=self.append_log)
 
             def _done():
-                self.btn_autosearch.configure(text="🔍 Автопоиск Every Proxy", state="normal")
+                self.btn_autosearch.configure(text="🔍 Автопоиск TetherVPN", state="normal")
                 self.btn_test_vpn.configure(state="normal")
                 if found_ip:
                     self.var_ip.set(found_ip)
@@ -1461,17 +1461,17 @@ class ModernProxySwitcherApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
         threading.Thread(target=_task, daemon=True).start()
 
     def on_test_vpn_clicked(self):
-        """Быстрая проверка Every Proxy и работы VPN для текущего введенного IP:PORT."""
+        """Быстрая проверка TetherVPN и работы VPN для текущего введенного IP:PORT."""
         ip = self.var_ip.get().strip()
         if not ip or not is_valid_ipv4(ip):
-            self.append_log("WARN", "Для проверки введите валидный IP или нажмите 'Автопоиск Every Proxy'.")
+            self.append_log("WARN", "Для проверки введите валидный IP или нажмите 'Автопоиск TetherVPN'.")
             return
 
         port_str = self.var_port.get().strip()
         port = int(port_str) if is_valid_port(port_str) else 8080
 
         self.btn_test_vpn.configure(text="⏳ Тест...", state="disabled")
-        self.append_log("INFO", f"Диагностика Every Proxy и сквозного интернета на {ip}:{port}...")
+        self.append_log("INFO", f"Диагностика TetherVPN и сквозного интернета на {ip}:{port}...")
 
         def _task():
             diag = check_proxy_and_vpn(ip=ip, port=port, timeout=2.5)
@@ -1502,9 +1502,9 @@ class ModernProxySwitcherApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
                     self.update_vpn_status_ui(diag)
                     if diag["status"] == "OK_VPN":
                         loc_txt = f" ({diag['location']})" if diag.get("location") else ""
-                        self.append_log("OK", f"Автопоиск: обнаружен рабочий Every Proxy на {found_ip}:{port}{loc_txt}")
+                        self.append_log("OK", f"Автопоиск: обнаружен рабочий TetherVPN на {found_ip}:{port}{loc_txt}")
                     elif diag["status"] == "PORT_OPEN_NO_VPN":
-                        self.append_log("WARN", f"Автопоиск: на {found_ip}:{port} открыт Every Proxy, но VPN на смартфоне не пропускает трафик!")
+                        self.append_log("WARN", f"Автопоиск: на {found_ip}:{port} открыт TetherVPN, но VPN на смартфоне не пропускает трафик!")
                 self.after(0, _update)
 
         threading.Thread(target=_task, daemon=True).start()
@@ -1518,13 +1518,13 @@ class ModernProxySwitcherApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
 
         # Если поле пустое, запускаем автопоиск или запрашиваем ввод
         if not ip or not is_valid_ipv4(ip):
-            self.append_log("INFO", "IP-адрес не указан. Запуск автопоиска Every Proxy в сети...")
+            self.append_log("INFO", "IP-адрес не указан. Запуск автопоиска TetherVPN в сети...")
             self.on_autosearch_clicked()
             ip = self.var_ip.get().strip()
             if not ip or not is_valid_ipv4(ip):
                 dialog = ctk.CTkInputDialog(
-                    text="Введите IP-адрес смартфона из блока HTTP приложения Every Proxy:",
-                    title="IP-адрес Every Proxy"
+                    text="Введите IP-адрес смартфона из приложения TetherVPN:",
+                    title="IP-адрес TetherVPN"
                 )
                 input_val = dialog.get_input()
                 if not input_val:
@@ -1551,7 +1551,7 @@ class ModernProxySwitcherApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
         def _worker():
             # Превентивная проверка VPN
             if check_ping:
-                self.append_log("INFO", f"Диагностика Every Proxy и работы мобильного VPN на {ip}:{port}...")
+                self.append_log("INFO", f"Диагностика TetherVPN и работы мобильного VPN на {ip}:{port}...")
                 diag = check_proxy_and_vpn(ip=ip, port=port, timeout=2.5)
                 self.after(0, lambda: self.update_vpn_status_ui(diag))
 
@@ -1563,7 +1563,7 @@ class ModernProxySwitcherApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
                     def _ask_modal():
                         ans = messagebox.askyesno(
                             "⚠️ Внимание: VPN на телефоне не работает!",
-                            f"Every Proxy на адресе {ip}:{port} отвечает, но интернет-трафик через него НЕ ИДЕТ!\n\n"
+                            f"TetherVPN на адресе {ip}:{port} отвечает, но интернет-трафик через него НЕ ИДЕТ!\n\n"
                             f"Возможные причины:\n"
                             f"• На телефоне отключен или завис VPN (V2Ray, Outline, WireGuard, Amnezia)\n"
                             f"• В приложении VPN не разрешена раздача на локальную сеть\n"
@@ -1588,12 +1588,12 @@ class ModernProxySwitcherApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
                         return
 
                 elif diag["status"] == "UNREACHABLE":
-                    self.append_log("ERROR", f"❌ Хост {ip}:{port} недоступен. Проверьте Wi-Fi и тумблер в Every Proxy.")
+                    self.append_log("ERROR", f"❌ Хост {ip}:{port} недоступен. Проверьте Wi-Fi и статус раздачи в TetherVPN.")
                     def _err_modal():
                         messagebox.showerror(
                             "Хост недоступен",
                             f"Хост {ip}:{port} не отвечает ни на пинг, ни на порту {port}.\n\n"
-                            f"Убедитесь, что ПК подключен к точке доступа телефона и в Every Proxy включен тумблер HTTP."
+                            f"Убедитесь, что ПК подключен к точке доступа телефона и в TetherVPN включена раздача."
                         )
                     self.after(0, _err_modal)
                     self.after(0, lambda: self.set_controls_state(True))
@@ -1684,15 +1684,15 @@ def run_cli_interactive():
         )
 
         print("\n" + "=" * 65)
-        print(f" {ConsoleColors.BOLD}📱 EVERY PROXY SWITCHER — УПРАВЛЕНИЕ СЕТЬЮ WINDOWS{ConsoleColors.RESET}")
+        print(f" {ConsoleColors.BOLD}📱 TETHERVPN — УПРАВЛЕНИЕ СЕТЬЮ WINDOWS{ConsoleColors.RESET}")
         print("=" * 65)
         print(f" Текущий статус: {status_line}")
         print(f" WinHTTP: {st['winhttp']} | Git: {st['git_proxy'] or 'Прямой'} | TTL: {st['ttl']}")
         print("-" * 65)
-        print(f" [{ConsoleColors.GREEN}1{ConsoleColors.RESET}] Включить проксирование (Every Proxy)")
+        print(f" [{ConsoleColors.GREEN}1{ConsoleColors.RESET}] Включить проксирование (TetherVPN)")
         print(f" [{ConsoleColors.RED}2{ConsoleColors.RESET}] Сбросить настройки (Вернуть обычный Wi-Fi / Домашний интернет)")
         print(f" [{ConsoleColors.CYAN}3{ConsoleColors.RESET}] Проверить текущий статус сети")
-        print(f" [{ConsoleColors.YELLOW}4{ConsoleColors.RESET}] 🔍 Автопоиск Every Proxy и диагностика VPN")
+        print(f" [{ConsoleColors.YELLOW}4{ConsoleColors.RESET}] 🔍 Автопоиск TetherVPN и диагностика VPN")
         print(f" [{ConsoleColors.GRAY}0{ConsoleColors.RESET}] Выход")
         print("=" * 65)
 
@@ -1701,13 +1701,13 @@ def run_cli_interactive():
         if choice == "1":
             ip_input = input(f"\nВведите IP-адрес телефона [или нажмите Enter для автопоиска]: ").strip()
             if not ip_input:
-                print("Запуск автопоиска Every Proxy в локальной сети...")
+                print("Запуск автопоиска TetherVPN в локальной сети...")
                 found_ip, diag = auto_detect_working_proxy(port=8080, log_cb=cli_log)
                 if found_ip:
                     ip = found_ip
                     print(f"{ConsoleColors.GREEN}Используем найденный IP: {ip}{ConsoleColors.RESET}")
                 else:
-                    print(f"{ConsoleColors.RED}Every Proxy не найден автоматически. Введите IP вручную.{ConsoleColors.RESET}")
+                    print(f"{ConsoleColors.RED}TetherVPN не найден автоматически. Введите IP вручную.{ConsoleColors.RESET}")
                     ip = ""
             else:
                 ip = ip_input
@@ -1717,21 +1717,21 @@ def run_cli_interactive():
                 if is_valid_ipv4(ip_val):
                     ip = ip_val
 
-            port_input = input("Порт Every Proxy [по умолчанию 8080]: ").strip()
+            port_input = input("Порт TetherVPN [по умолчанию 8080]: ").strip()
             port = int(port_input) if (port_input.isdigit() and is_valid_port(port_input)) else 8080
 
             # Диагностика VPN перед применением
-            print("Проверка Every Proxy и мобильного VPN...")
+            print("Проверка TetherVPN и мобильного VPN...")
             diag = check_proxy_and_vpn(ip=ip, port=port, timeout=2.5)
             if diag["status"] == "PORT_OPEN_NO_VPN":
-                print(f"\n{ConsoleColors.RED}⚠️ ВНИМАНИЕ: Порт Every Proxy открыт, но VPN на смартфоне НЕ РАБОТАЕТ!{ConsoleColors.RESET}")
+                print(f"\n{ConsoleColors.RED}⚠️ ВНИМАНИЕ: Порт TetherVPN открыт, но VPN на смартфоне НЕ РАБОТАЕТ!{ConsoleColors.RESET}")
                 print("Пакеты в интернет не проходят. Если включить прокси, интернет на ПК пропадет.")
                 ans_cont = input("Все равно включить проксирование? [y/N]: ").strip().lower()
                 if ans_cont not in ("y", "yes", "да", "1"):
                     print("Включение отменено.")
                     continue
             elif diag["status"] == "UNREACHABLE":
-                print(f"{ConsoleColors.RED}❌ Хост {ip}:{port} недоступен. Проверьте Wi-Fi и Every Proxy.{ConsoleColors.RESET}")
+                print(f"{ConsoleColors.RED}❌ Хост {ip}:{port} недоступен. Проверьте Wi-Fi и TetherVPN.{ConsoleColors.RESET}")
                 continue
             else:
                 print(f"{ConsoleColors.GREEN}✅ VPN активен! {diag['message']}{ConsoleColors.RESET}")
@@ -1770,7 +1770,7 @@ def run_cli_interactive():
 
         elif choice == "4":
             print("\n" + "=" * 50)
-            print(" 🔍 АВТОПОИСК EVERY PROXY И ПРОВЕРКА VPN")
+            print(" 🔍 АВТОПОИСК TETHERVPN И ПРОВЕРКА VPN")
             print("=" * 50)
             port_in = input("Порт для поиска [по умолчанию 8080]: ").strip()
             port = int(port_in) if (port_in.isdigit() and is_valid_port(port_in)) else 8080
@@ -1780,7 +1780,7 @@ def run_cli_interactive():
                 print(f"{ConsoleColors.GREEN}Результат: Найден узел {found_ip}:{port}{ConsoleColors.RESET}")
                 print(f"Статус: {diag['message']}")
             else:
-                print(f"{ConsoleColors.RED}Результат: Every Proxy не обнаружен.{ConsoleColors.RESET}")
+                print(f"{ConsoleColors.RED}Результат: TetherVPN не обнаружен.{ConsoleColors.RESET}")
             print("=" * 50)
             print("-" * 50)
 
@@ -1798,7 +1798,7 @@ def run_cli_interactive():
 def main():
     """Точка входа: проверка UAC, аргументы CLI и запуск интерфейса."""
     parser = argparse.ArgumentParser(
-        description="Every Proxy Switcher — переключение прокси и домашнего интернета на Windows 10/11"
+        description="TetherVPN — переключение прокси и домашнего интернета на Windows 10/11"
     )
     parser.add_argument("--cli", action="store_true", help="Запустить в интерактивном консольном режиме")
     parser.add_argument("--enable", metavar="IP", help="Быстро включить прокси для указанного IP")
@@ -1871,7 +1871,7 @@ def main():
         except Exception:
             pass
 
-    app = ModernProxySwitcherApp()
+    app = TetherVPNApp()
     app.mainloop()
 
 
