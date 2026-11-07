@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+build/
+dist/
+release/
+
+# Android & Gradle
+.gradle/
+**/build/
+captures/
+*.apk
+*.aab
+.cxx/
+local.properties
+
+# Allow release binaries
+!TetherVPN.apk
+!TetherVPN.exe
+
+# IDEs
+.idea/
+*.iml
+.vscode/

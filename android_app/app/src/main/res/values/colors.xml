@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_dark">#111317</color>
+    <color name="card_surface">#1C1E24</color>
+    <color name="card_stroke">#2E323D</color>
+    <color name="card_inner">#16171B</color>
+
+    <color name="tab_bg">#16171B</color>
+    <color name="tab_selected_bg">#2A2E3D</color>
+    <color name="tab_selected_stroke">#3B82F6</color>
+
+    <color name="accent_blue">#3B82F6</color>
+    <color name="accent_blue_hover">#2563EB</color>
+    <color name="accent_indigo">#6366F1</color>
+    
+    <color name="accent_green">#10B981</color>
+    <color name="accent_green_bg">#18392B</color>
+    
+    <color name="accent_red">#EF4444</color>
+    <color name="accent_red_bg">#3D1E22</color>
+
+    <color name="accent_yellow">#F59E0B</color>
+    <color name="accent_yellow_bg">#3D321E</color>
+
+    <color name="text_white">#F9FAFB</color>
+    <color name="text_muted">#9CA3AF</color>
+    <color name="text_dim">#6B7280</color>
+    
+    <color name="status_bar_color">#111317</color>
+</resources>
