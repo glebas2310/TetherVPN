@@ -22,3 +22,6 @@ local.properties
 .idea/
 *.iml
 .vscode/
+
+# Temporary / scratch
+scratch/
