@@ -1,8 +1,9 @@
 # 📱 TetherVPN
 
-Инструмент передачи VPN и обхода белых списков (из Happ,v2RayTun, Throne и т.д.) через точку доступа или USB-модему путем шифрования входящих пакетов как с другого телефона, так и с ПК.
+Инструмент передачи VPN и обхода белых списков (из Happ, v2RayTun, Throne и т.д.) через точку доступа или USB-модем путем шифрования входящих пакетов как с другого телефона, так и с ПК/Mac.
 
 Сорян, сам пока широко не тестил, только на своей мобиле и компе, но на 3+ устройств норм работает.
+
 ---
 
 ## ⚡ Быстрое скачивание приложений
@@ -11,8 +12,9 @@
 
 | Платформа | Файл | Прямая ссылка для скачивания |
 | :--- | :--- | :--- |
-| 🤖 **Android** | `TetherVPN.apk` | [⬇️ **Скачать TetherVPN.apk**](https://github.com/glebas2310/TetherVPN/releases/download/v1.0.0/TetherVPN.apk) |
-| 💻 **Windows** | `TetherVPN.exe` | [⬇️ **Скачать TetherVPN.exe**](https://github.com/glebas2310/TetherVPN/releases/download/v1.0.0/TetherVPN.exe) |
+| 🤖 **Android** | `TetherVPN.apk` | [⬇️ **Скачать TetherVPN.apk**](https://github.com/glebas2310/TetherVPN/releases/download/v1.0.0/TetherVPN.apk) *(или [из репозитория](https://github.com/glebas2310/TetherVPN/raw/main/TetherVPN.apk))* |
+| 💻 **Windows** | `TetherVPN.exe` | [⬇️ **Скачать TetherVPN.exe**](https://github.com/glebas2310/TetherVPN/releases/download/v1.0.0/TetherVPN.exe) *(или [из репозитория](https://github.com/glebas2310/TetherVPN/raw/main/TetherVPN.exe))* |
+| 🍏 **macOS** | `proxy_switcher_mac.py` | [⬇️ **Скачать proxy_switcher_mac.py**](https://github.com/glebas2310/TetherVPN/raw/main/proxy_switcher_mac.py) *(или [исходный код](proxy_switcher_mac.py))* |
 
 > 📌 **Все релизы и версии:** доступны в разделе **[Releases](https://github.com/glebas2310/TetherVPN/releases)**.
 
@@ -24,7 +26,9 @@
 Используется на телефоне, на котором уже работает ваш VPN.
 
 1. **Включите раздачу интернета:**
+   - Включите **Точку доступа Wi-Fi (Мобильный хотспот)** или **USB-модем** в настройках смартфона.
 2. **Проверьте настройки вашего VPN-клиента:**
+   - Если в вашем VPN включено *«Раздельное туннелирование»* (Per-App Proxy), обязательно **поставьте галочку / разрешите TetherVPN**.
 3. **Запустите раздачу в TetherVPN:**
    - Откройте **TetherVPN** на телефоне.
    - Нажмите **«Включить раздачу»**.
@@ -46,7 +50,23 @@
 
 ---
 
-### Сценарий 3: Прием VPN на втором смартфоне (Клиент)
+### Сценарий 3: Прием VPN на компьютерах Apple (macOS)
+Используется на Mac (MacBook, iMac, Mac mini) под управлением macOS:
+
+1. Подключите Mac к Wi-Fi сети раздающего смартфона или включите USB-модем.
+2. Запустите клиент:
+   ```bash
+   python3 proxy_switcher_mac.py
+   ```
+   *(Также можно скомпилировать в нативный `TetherVPN.app` через PyInstaller).*
+3. Нажмите кнопку **«🔍 Автопоиск в сети»** или введите IP телефона.
+4. Нажмите **«⚡ Подключить системный прокси (TetherVPN)»**:
+   - Утилита настроит системный HTTP/HTTPS прокси macOS, список исключений (Bypass) и маскировку TTL=65.
+5. При завершении работы нажмите **«🛑 Отключить проксирование»**.
+
+---
+
+### Сценарий 4: Прием VPN на втором смартфоне (Клиент)
 Используется на телефоне, которому нужен VPN-интернет от первого телефона.
 
 1. Подключите второй смартфон к точке доступа Wi-Fi первого смартфона.
