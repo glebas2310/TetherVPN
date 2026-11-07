@@ -9,7 +9,7 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 
 a = Analysis(
-    ['proxy_switcher.py'],
+    ['C:/Users/Glebas/PycharmProjects/proxy_switcher/proxy_switcher.py'],
     pathex=[],
     binaries=binaries,
     datas=datas,
@@ -43,5 +43,5 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     uac_admin=True,
-    icon=['app_icon.ico'],
+    icon=['C:/Users/Glebas/PycharmProjects/proxy_switcher/app_icon.ico'],
 )

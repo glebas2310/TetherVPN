@@ -418,7 +418,7 @@ def auto_detect_working_proxy(port: int = 8080, current_ip: str = "", log_cb=Non
     if not candidates:
         return None, {"status": "NOT_FOUND", "message": "Сетевые узлы не обнаружены"}
 
-    log("INFO", f"🔍 Автопоиск TetherVPN среди {len(candidates)} потенциальных адресов сети...")
+    log("INFO", f"🔍 Автопоиск прокси среди {len(candidates)} потенциальных адресов сети...")
 
     # Быстрый опрос TCP-порта 8080 параллельно
     open_candidates: list[tuple[str, str]] = []
@@ -821,16 +821,15 @@ class TetherVPNApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
         self.is_busy = False
 
         self._build_ui()
-        self._detect_gateway_hint()
         self.refresh_status()
 
         # Фокус на поле ввода IP
         self.after(150, lambda: self.entry_ip.focus_set())
 
-        # Автоматический фоновый поиск рабочего TetherVPN и проверка VPN
+        # Автоматический фоновый поиск рабочего прокси и проверка VPN
         self.after(350, self.start_auto_detect_silent)
 
-    def _center_window(self, width: int = 740, height: int = 800):
+    def _center_window(self, width: int = 740, height: int = 710):
         """Размещает окно строго по центру экрана пользователя."""
         self.update_idletasks()
         sw = self.winfo_screenwidth()
@@ -902,59 +901,7 @@ class TetherVPNApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
         )
         self.lbl_status_pill.pack(padx=12, pady=4)
 
-        # ---------------- 2. КАРТОЧКА СТАТУСА СИСТЕМЫ ----------------
-        card_status = ctk.CTkFrame(
-            self.main_container,
-            fg_color=self.COLOR_CARD,
-            corner_radius=12,
-            border_width=1,
-            border_color=self.COLOR_BORDER
-        )
-        card_status.pack(fill="x", pady=(0, 12))
-
-        # Заголовок карточки статуса
-        hdr_status = ctk.CTkFrame(card_status, fg_color="transparent")
-        hdr_status.pack(fill="x", padx=16, pady=(12, 8))
-
-        lbl_status_sec = ctk.CTkLabel(
-            hdr_status,
-            text="СИСТЕМНЫЙ СТАТУС СЕТИ",
-            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
-            text_color=self.COLOR_TEXT_MUTED
-        )
-        lbl_status_sec.pack(side="left")
-
-        self.btn_refresh = ctk.CTkButton(
-            hdr_status,
-            text="🔄 Обновить",
-            width=90,
-            height=26,
-            corner_radius=6,
-            font=ctk.CTkFont(family="Segoe UI", size=11),
-            fg_color=self.COLOR_CARD_ALT,
-            hover_color="#32343B",
-            border_width=1,
-            border_color=self.COLOR_BORDER,
-            text_color=self.COLOR_TEXT,
-            command=self.refresh_status
-        )
-        self.btn_refresh.pack(side="right")
-
-        # Сетка из 4 мини-чипов компонентов
-        chips_grid = ctk.CTkFrame(card_status, fg_color="transparent")
-        chips_grid.pack(fill="x", padx=14, pady=(0, 14))
-        chips_grid.grid_columnconfigure((0, 1, 2, 3), weight=1)
-
-        # Чип 1: WinHTTP
-        self.chip_winhttp = self._create_status_chip(chips_grid, 0, "WinHTTP", "Прямой")
-        # Чип 2: Переменные среды
-        self.chip_env = self._create_status_chip(chips_grid, 1, "Переменные (setx)", "Чисто")
-        # Чип 3: Git Прокси
-        self.chip_git = self._create_status_chip(chips_grid, 2, "Git Прокси", "Выкл")
-        # Чип 4: TTL (Hop Limit)
-        self.chip_ttl = self._create_status_chip(chips_grid, 3, "TTL (IPv4)", "128")
-
-        # ---------------- 3. КАРТОЧКА НАСТРОЕК TETHERVPN ----------------
+        # ---------------- 2. КАРТОЧКА НАСТРОЕК ПОДКЛЮЧЕНИЯ ----------------
         card_settings = ctk.CTkFrame(
             self.main_container,
             fg_color=self.COLOR_CARD,
@@ -970,7 +917,7 @@ class TetherVPNApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
 
         lbl_cfg_title = ctk.CTkLabel(
             hdr_settings,
-            text="ПАРАМЕТРЫ ПОДКЛЮЧЕНИЯ TETHERVPN",
+            text="ПАРАМЕТРЫ ПОДКЛЮЧЕНИЯ",
             font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
             text_color=self.COLOR_TEXT_MUTED
         )
@@ -978,7 +925,7 @@ class TetherVPNApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
 
         self.btn_autosearch = ctk.CTkButton(
             hdr_settings,
-            text="🔍 Автопоиск TetherVPN",
+            text="🔍 Автопоиск прокси",
             width=175,
             height=28,
             corner_radius=6,
@@ -1085,7 +1032,7 @@ class TetherVPNApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
 
         self.lbl_vpn_status = ctk.CTkLabel(
             self.vpn_status_card,
-            text="💡 Нажмите '🔍 Автопоиск TetherVPN' для автоматического поиска рабочего IP и проверки VPN.",
+            text="💡 Нажмите '🔍 Автопоиск прокси' для автоматического поиска рабочего IP и проверки VPN.",
             font=ctk.CTkFont(family="Segoe UI", size=11),
             text_color=self.COLOR_TEXT_MUTED,
             anchor="w",
@@ -1099,7 +1046,7 @@ class TetherVPNApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
 
         self.lbl_hint_tip = ctk.CTkLabel(
             self.frame_hint,
-            text="💡 Включите раздачу в TetherVPN на смартфоне и введите указанный IP.",
+            text="💡 Включите раздачу TetherVPN на смартфоне и введите указанный IP.",
             font=ctk.CTkFont(family="Segoe UI", size=11),
             text_color=self.COLOR_TEXT_MUTED
         )
@@ -1243,56 +1190,6 @@ class TetherVPNApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
 
         self.append_log("INFO", "Интерфейс CustomTkinter загружен. Права администратора активны.")
 
-    def _create_status_chip(self, parent: ctk.CTkFrame, col: int, title: str, default_val: str) -> dict:
-        """Создает стильный мини-бейдж статуса одного сетевого компонента."""
-        chip_frame = ctk.CTkFrame(
-            parent,
-            fg_color=self.COLOR_CARD_ALT,
-            corner_radius=8,
-            border_width=1,
-            border_color=self.COLOR_BORDER
-        )
-        chip_frame.grid(row=0, column=col, padx=3, pady=2, sticky="nsew")
-
-        lbl_t = ctk.CTkLabel(
-            chip_frame,
-            text=title,
-            font=ctk.CTkFont(family="Segoe UI", size=10),
-            text_color=self.COLOR_TEXT_MUTED
-        )
-        lbl_t.pack(anchor="w", padx=8, pady=(4, 0))
-
-        lbl_v = ctk.CTkLabel(
-            chip_frame,
-            text=default_val,
-            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
-            text_color=self.COLOR_TEXT
-        )
-        lbl_v.pack(anchor="w", padx=8, pady=(0, 4))
-
-        return {"frame": chip_frame, "title": lbl_t, "value": lbl_v}
-
-    def _detect_gateway_hint(self):
-        """Определяет шлюз Wi-Fi адаптера и создает кликабельный pill-бейдж для быстрой вставки."""
-        gateways = detect_network_gateways()
-        if gateways:
-            suggested = gateways[0]
-            # Кликабельная кнопка-бейдж для автозаполнения
-            btn_pill = ctk.CTkButton(
-                self.frame_hint,
-                text=f"💡 Обнаружен шлюз: {suggested} (нажмите для вставки)",
-                height=26,
-                corner_radius=13,
-                font=ctk.CTkFont(family="Segoe UI", size=11),
-                fg_color="#1E293B",
-                hover_color="#334155",
-                border_width=1,
-                border_color="#38BDF8",
-                text_color="#38BDF8",
-                command=lambda: self.var_ip.set(suggested)
-            )
-            btn_pill.pack(side="right")
-
     def append_log(self, level: str, message: str):
         """Потокобезопасный вывод форматированного лога в терминал."""
         def _insert():
@@ -1325,7 +1222,8 @@ class TetherVPNApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
         state = "normal" if enabled else "disabled"
         self.btn_enable.configure(state=state)
         self.btn_reset.configure(state=state)
-        self.btn_refresh.configure(state=state)
+        if hasattr(self, 'btn_refresh'):
+            self.btn_refresh.configure(state=state)
         self.entry_ip.configure(state=state)
         self.entry_port.configure(state=state)
 
@@ -1428,7 +1326,7 @@ class TetherVPNApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
                 border_color=self.COLOR_BORDER
             )
             self.lbl_vpn_status.configure(
-                text="💡 Нажмите '🔍 Автопоиск TetherVPN' для автоматического поиска рабочего IP.",
+                text="💡 Нажмите '🔍 Автопоиск прокси' для автоматического поиска рабочего IP.",
                 text_color=self.COLOR_TEXT_MUTED
             )
 
@@ -1448,7 +1346,7 @@ class TetherVPNApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
             found_ip, diag = auto_detect_working_proxy(port=port, current_ip=curr_ip, log_cb=self.append_log)
 
             def _done():
-                self.btn_autosearch.configure(text="🔍 Автопоиск TetherVPN", state="normal")
+                self.btn_autosearch.configure(text="🔍 Автопоиск прокси", state="normal")
                 self.btn_test_vpn.configure(state="normal")
                 if found_ip:
                     self.var_ip.set(found_ip)
@@ -1464,7 +1362,7 @@ class TetherVPNApp(ctk.CTk if CUSTOMTKINTER_AVAILABLE else object):
         """Быстрая проверка TetherVPN и работы VPN для текущего введенного IP:PORT."""
         ip = self.var_ip.get().strip()
         if not ip or not is_valid_ipv4(ip):
-            self.append_log("WARN", "Для проверки введите валидный IP или нажмите 'Автопоиск TetherVPN'.")
+            self.append_log("WARN", "Для проверки введите валидный IP или нажмите 'Автопоиск прокси'.")
             return
 
         port_str = self.var_port.get().strip()
@@ -1692,7 +1590,7 @@ def run_cli_interactive():
         print(f" [{ConsoleColors.GREEN}1{ConsoleColors.RESET}] Включить проксирование (TetherVPN)")
         print(f" [{ConsoleColors.RED}2{ConsoleColors.RESET}] Сбросить настройки (Вернуть обычный Wi-Fi / Домашний интернет)")
         print(f" [{ConsoleColors.CYAN}3{ConsoleColors.RESET}] Проверить текущий статус сети")
-        print(f" [{ConsoleColors.YELLOW}4{ConsoleColors.RESET}] 🔍 Автопоиск TetherVPN и диагностика VPN")
+        print(f" [{ConsoleColors.YELLOW}4{ConsoleColors.RESET}] 🔍 Автопоиск прокси и диагностика VPN")
         print(f" [{ConsoleColors.GRAY}0{ConsoleColors.RESET}] Выход")
         print("=" * 65)
 
@@ -1770,7 +1668,7 @@ def run_cli_interactive():
 
         elif choice == "4":
             print("\n" + "=" * 50)
-            print(" 🔍 АВТОПОИСК TETHERVPN И ПРОВЕРКА VPN")
+            print(" 🔍 АВТОПОИСК ПРОКСИ И ПРОВЕРКА VPN")
             print("=" * 50)
             port_in = input("Порт для поиска [по умолчанию 8080]: ").strip()
             port = int(port_in) if (port_in.isdigit() and is_valid_port(port_in)) else 8080
